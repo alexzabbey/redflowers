@@ -1,0 +1,9 @@
+build:
+  docker:
+    web: Dockerfile
+run:
+  web: uvicorn app.server:app --port $PORT --host 0.0.0.0 --workers $WEB_CONCURRENCY
+  # worker:
+  #   command:
+  #     - python app/get_model.py
+  #   image: web

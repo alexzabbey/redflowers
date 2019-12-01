@@ -1,0 +1,101 @@
+<html lang="en" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="../static/assets/favicon.ico" />
+    <!----------STYLESHEETS---------->
+    <link
+      href="https://fonts.googleapis.com/css?family=Rubik:400,700&display=swap&subset=hebrew"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css"
+    />
+    <!-- <link rel="stylesheet" href="../static/animate.css" /> -->
+    <link rel="stylesheet" href="../static/normalize.css" />
+    <link rel="stylesheet" href="../static/style.css" />
+    <!------------SCRIPTS------------>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="title"><img src="../static/assets/cnp.svg" /></div>
+      <div
+        class="upload-area"
+        :style="{ width: width, height: height }"
+        id="file-drag-drop"
+        ref="uploadArea"
+      >
+        <!-- <button @click="result = !result">
+          Toggle
+        </button> -->
+        <div
+          ref="fileform"
+          class="upload"
+          :class="{ 'is-active': isActive }"
+          :style="{ backgroundImage: fileb}"
+        >
+          <!-- THINGS TO ADD 
+          change: 'שינוי תמונה', // Text only
+        remove: 'הסרת תמונה', // Text only
+        fileSize: 'הקובץ גדול מדי', // Text only
+        fileType: 'סוג הקובץ אינו נתמך', // Text only -->
+
+          <input
+            class="click-upload"
+            type="file"
+            @change="processFile($event)"
+            title
+          />
+          <transition name="circle-in">
+            <div
+              v-if="result"
+              class="result-show"
+              :class="{ 'is-active': isActive, 'bad': isBad, 'good': isGood }"
+              :style="{isBad: 'content: none', isGood: 'content: none'}"
+            >
+              <p class="result">{{ result }}!</p>
+              <p>
+                {{ isMobile() ? 'לחצו כאן להעלאת' : 'לחצו או גררו לכאן'}} תמונה
+                נוספת
+              </p>
+            </div>
+          </transition>
+
+          <div v-if="!isPicShowing" class="initial-upload">
+            <img src="static/assets/flower-picture.svg" />
+            <p>
+              {{ isMobile() ? 'לחצו כאן להעלאת' : 'לחצו או גררו לכאן'}} תמונה
+            </p>
+          </div>
+        </div>
+        <div class="feedback-area pin-left">
+          <div v-for="flower in otherTwo">
+            <input
+              type="radio"
+              v-model="feedback"
+              :value="flower"
+              :id="flower"
+              name="feedback"
+              @click="sendFeedback(flower)"
+            /><label class="feedback" :for="flower">{{ flower }}</label>
+          </div>
+          <!-- @click="sendFeedback(feedback)" -->
+        </div>
+        <div class="analyze-area pin-left">
+          <button
+            class="analyze-button"
+            @click="submitFiles"
+            v-if="isPicShowing && !result"
+            :class="{ clicked: clicked }"
+          >
+            עזרו לי להגדיר!
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script src="../static/file-drag-drop-app.js"></script>
+</html>

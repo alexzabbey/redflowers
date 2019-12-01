@@ -1,0 +1,360 @@
+$red: #eb4034;
+$darker-red: #d1382e;
+$even-darker-red: #b83228;
+$green: #2aad53;
+$darker-green: #239447;
+$purple: #5f34eb;
+$darker-purple: #502cc7;
+$white: floralwhite;
+$darker-white: #e6e1d8;
+$transparent: rgba(0, 0, 0, 0);
+
+@mixin analyze-box {
+  -webkit-mask-image: url(/static/layout/analyze-box.svg);
+  mask-image: url(/static/layout/analyze-box.svg);
+}
+
+@mixin vertical-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+@mixin backdrop {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  z-index: -1;
+}
+
+@mixin prefix-animation($name, $duration, $timing) {
+  -webkit-animation: $name $duration $timing;
+  -moz-animation: $name $duration $timing;
+  animation: $name $duration $timing;
+}
+
+@mixin circle-in($name, $position) {
+  @keyframes circle-in-#{$name} {
+    0% {
+      clip-path: circle(0% at 0 $position);
+    }
+    to {
+      clip-path: circle(200% at 0 $position);
+    }
+  }
+}
+
+@include circle-in(top-left, 20%);
+@include circle-in(bottom-left, 90%);
+
+body {
+  background-color: $red;
+  color: $white;
+  font-family: "Rubik", sans-serif;
+  margin: 0;
+  height: 100vh;
+}
+
+button,
+label,
+input {
+  color: $white;
+  font-family: "Rubik", sans-serif;
+  background-color: $transparent;
+  text-align: center;
+  &:focus {
+    outline: 0;
+  }
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+button,
+label {
+  @include analyze-box;
+  border: solid 0px;
+}
+
+input[type="radio"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.container {
+  text-align: center;
+  margin: 0 8vw;
+  font-size: 2rem;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  align-items: center;
+  justify-items: center;
+  column-gap: 50px;
+  height: 100%;
+}
+
+.title {
+  width: 100%;
+
+  img {
+    width: 100%;
+  }
+}
+
+.upload-area {
+  position: relative;
+  width: 100%;
+  height: 85%;
+  align-items: center;
+}
+
+.upload {
+  -webkit-mask-image: url(/static/layout/upload-box.svg);
+  mask-image: url(/static/layout/upload-box.svg);
+  background-color: $white;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 100%;
+  position: relative;
+  .initial-upload {
+    @include vertical-center;
+    color: $red;
+    height: 100%;
+    img {
+      height: 40%;
+    }
+  }
+}
+
+.result-show {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  @include vertical-center;
+  &::after {
+    @include backdrop;
+    background-color: $darker-purple;
+    opacity: 0.7;
+  }
+  p {
+    padding: 0 120px;
+    margin: 2rem 0;
+  }
+  .result {
+    font-size: 5rem;
+  }
+}
+
+.circle-in-enter-active {
+  @include prefix-animation(circle-in-bottom-left, 0.5s, ease-out);
+}
+
+.is-active {
+  filter: brightness(90%);
+}
+
+.click-upload {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+}
+
+.pin-left {
+  left: -30px;
+  position: absolute;
+  width: min-content;
+}
+
+.analyze-area {
+  bottom: 0;
+}
+
+.analyze-button {
+  padding: 40px;
+  background-color: $purple;
+  &::after {
+    width: 0%;
+    padding: 0;
+  }
+  &:active {
+    background-color: $darker-purple;
+  }
+}
+.clicked {
+  &::after {
+    content: "";
+    z-index: -1;
+    position: absolute;
+    background: $darker-purple;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    @include prefix-animation(filler, 1s, ease-out);
+  }
+}
+
+@keyframes filler {
+  0% {
+    width: 0;
+  }
+}
+
+.feedback-area {
+  top: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.feedback-area div:first-child label {
+  background-color: $green;
+  &:active {
+    background-color: $darker-green;
+  }
+  &::after {
+    content: "!";
+  }
+}
+
+input[type="radio"]:checked + label.feedback {
+  // font-weight: bold;
+  filter: brightness(90%);
+}
+
+.feedback {
+  display: block;
+  width: 120px;
+  padding: 20% 10%;
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+  background-color: $darker-red;
+  &:active {
+    background-color: $even-darker-red;
+  }
+}
+
+.good::after {
+  @include backdrop;
+  background-color: $green;
+  opacity: 0.7;
+  @include prefix-animation(circle-in-top-left, 0.8s, ease-out);
+  // transition: background-color 3s ease-in;
+}
+.bad::after {
+  @include backdrop;
+  background-color: $red;
+  opacity: 0.7;
+  @include prefix-animation(circle-in-top-left, 0.8s, ease-out);
+}
+
+@media (orientation: portrait) {
+  .container {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 4fr;
+    row-gap: 20px;
+    margin: 0;
+    padding: 20px;
+    font-size: 2rem;
+  }
+  .title {
+    width: 45%;
+  }
+  .upload-area {
+    height: 100%;
+  }
+  .analyze-button {
+    padding: 15%;
+    width: 10rem;
+  }
+  .feedback-area {
+    top: 85%;
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+    height: min-content;
+  }
+  .pin-left {
+    left: 0;
+  }
+}
+
+// mobile
+@media (max-device-width: 900px) and (-webkit-min-device-pixel-ratio: 2) {
+  .container {
+    font-size: 4rem;
+  }
+  .feedback {
+    font-size: 4rem;
+    width: 12rem;
+  }
+  .title {
+    width: 70%;
+  }
+  .analyze-button {
+    padding: 15%;
+  }
+}
+
+@media (max-device-width: 900px) and (orientation: landscape) {
+  .analyze-button {
+    width: 10rem;
+  }
+  .initial-upload img {
+    display: none;
+  }
+  .container {
+    font-size: 2rem;
+  }
+  .feedback {
+    font-size: 2rem;
+    width: 6rem;
+  }
+}
+
+@media (max-device-width: 900px) and (orientation: portrait) {
+  .analyze-button {
+    width: 20rem;
+  }
+}
+
+// .bump-enter-active {
+//   animation: bump-in 0.7s cubic-bezier(0.2, 0.7, 0.8, 1.4);
+// }
+
+// .bump2-enter-active {
+//   animation: bump-in 0.8s cubic-bezier(0.2, 0.7, 0.8, 1.4);
+// }
+
+// @keyframes bump-in {
+//   0% {
+//     transform: scale(0);
+//     font-size: 0px;
+//     width: 0;
+//   }
+//   50% {
+//     transform: scale(0);
+//     font-size: 0px;
+//     width: 0;
+//   }
+//   60% {
+//     font-size: 0px;
+//     width: 40px;
+//   }
+//   to {
+//     transform: scale(1);
+//     width: 120px;
+//   }
+// }
