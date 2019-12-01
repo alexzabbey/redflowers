@@ -1,0 +1,6 @@
+*.pth
+*.pkl
+.gitignore
+app/__pycache__
+Dockerfile
+README.md
