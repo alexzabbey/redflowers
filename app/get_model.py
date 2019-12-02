@@ -3,7 +3,9 @@ from fastai import *
 from fastai.vision import *
 from google.cloud import storage
 import pickle
-
+from uuid import uuid4
+from databases import Database
+from datetime import datetime
 
 classes = ["calanit", "nurit", "pereg"]
 path = Path(__file__).parent

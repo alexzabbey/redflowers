@@ -6,4 +6,4 @@ uvicorn
 python-multipart
 aiofiles
 google-cloud-storage
-databases[sqlite]
+databases[postgresql]

@@ -72,19 +72,21 @@ async def store(f, filename):
 
 
 async def write_metadata(payload):
-    database = Database(f"sqlite:///{path / 'storage' / 'db.db'}")
-    await database.connect()
-    if payload.get("prediction", None):
-        query = """INSERT INTO predictions(timestamp, filename, prediction, score)
-                VALUES (:timestamp, :filename, :prediction, :score)"""
-        payload["timestamp"] = str(datetime.utcnow())[:-3]
-    elif payload.get("feedback", None):
-        query = """UPDATE predictions
-                SET feedback=:feedback
-                WHERE filename=:filename"""
-    else:
-        return
-    await database.execute(query=query, values=payload)
+    DATABASE_URL = (
+        os.environ["DATABASE_URL"].replace("postgres", "postgresql") + "?sslmode=require"
+    )
+    async with Database(DATABASE_URL) as database:
+        if payload.get("prediction", None):
+            query = """INSERT INTO predictions(timestamp, filename, prediction, score)
+                    VALUES (:timestamp, :filename, :prediction, :score)"""
+            payload["timestamp"] = datetime.utcnow()
+        elif payload.get("feedback", None):
+            query = """UPDATE predictions
+                    SET feedback=:feedback
+                    WHERE filename=:filename"""
+        else:
+            return
+        await database.execute(query=query, values=payload)
 
 
 @app.route("/")
