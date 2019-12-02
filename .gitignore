@@ -6,3 +6,4 @@ app/.vscode
 *.pth
 *.map
 *.pkl
+keyfile.json
