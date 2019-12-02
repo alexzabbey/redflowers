@@ -12,4 +12,4 @@ ENV WEB_CONCURRENCY=2
 
 EXPOSE 8080
 
-CMD uvicorn app.server:app --port $PORT --workers $WEB_CONCURRENCY
+CMD uvicorn app.server:app --port $PORT --workers $WEB_CONCURRENCY --host 0.0.0.0
