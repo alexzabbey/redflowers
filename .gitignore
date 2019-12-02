@@ -7,3 +7,4 @@ app/.vscode
 *.map
 *.pkl
 keyfile.json
+login.txt

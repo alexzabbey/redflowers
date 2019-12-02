@@ -11,6 +11,7 @@ classes = ["calanit", "nurit", "pereg"]
 path = Path(__file__).parent
 BUCKET = "cnp-classifier-249308.appspot.com"
 MODEL_FILE_NAME = "stage-2"
+test = True
 
 
 async def download_file(dest):
@@ -43,8 +44,33 @@ async def setup_learner():
     return learn
 
 
+async def write_metadata(payload):
+    if test:
+        with open("login.txt", "r") as f:
+            os.environ["DATABASE_URL"] = f.read()
+    DATABASE_URL = (
+        os.environ["DATABASE_URL"].replace("postgres", "postgresql")
+        + "?sslmode=require"
+    )
+    async with Database(DATABASE_URL) as database:
+        if type(payload) == str:
+            await database.execute(query=payload)
+            return
+        if payload.get("prediction", None):
+            query = """INSERT INTO predictions(timestamp, filename, prediction, score)
+                    VALUES (:timestamp, :filename, :prediction, :score)"""
+            payload["timestamp"] = datetime.utcnow()
+        elif payload.get("feedback", None):
+            query = """UPDATE predictions
+                    SET feedback=:feedback
+                    WHERE filename=:filename"""
+        else:
+            return
+        await database.execute(query=query, values=payload)
+
+
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    tasks = [asyncio.ensure_future(setup_learner())]
+    tasks = [asyncio.ensure_future(write_metadata("delete from predictions"))]
     learn = loop.run_until_complete(asyncio.gather(*tasks))[0]
     loop.close()

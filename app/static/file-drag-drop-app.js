@@ -87,8 +87,12 @@ new Vue({
           return value;
         } else if (w === value) {
           return key;
+        } else if (w === "not red flower") {
+          return "כנראה שזה לא אחד מהשלושה";
         } else if (w === "נכון") {
-          return true;
+          return "true";
+        } else if (w === "לא נכון") {
+          return "false";
         }
       }
     },
@@ -125,6 +129,7 @@ new Vue({
         this.sendFeedback();
         this.clicked = false;
         this.result = false;
+        this.isBad = false;
         this.otherTwo = [];
         this.isPicShowing = true;
       } else {
@@ -141,11 +146,16 @@ new Vue({
           .then(response => {
             console.log(response);
             this.result = this.translate(response["data"]["prediction"]);
-            this.otherTwo = ["נכון"].concat(
-              Object.values(this.allThree).filter(value => {
-                return value != this.result;
-              })
-            );
+            if (Object.values(this.allThree).indexOf(this.result) > -1) {
+              this.otherTwo = ["נכון"].concat(
+                Object.values(this.allThree).filter(value => {
+                  return value != this.result;
+                })
+              );
+            } else {
+              this.isBad = true;
+              this.otherTwo = ["נכון", "לא נכון"];
+            }
             this.filename = response["data"]["filename"];
           })
           .catch(error => {
@@ -160,7 +170,7 @@ new Vue({
     sendFeedback(feedback) {
       console.log(feedback);
       if (feedback) {
-        if (feedback === "נכון") {
+        if (feedback === this.otherTwo[0]) {
           this.isGood = true;
           this.isBad = false;
           this.result = "מעולה! תודה על הפידבק";

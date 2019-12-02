@@ -20,3 +20,4 @@
 - [x] change file download from google drive
 - [x] build more robust ui with vue or something
 - [x] allow feedback to check precision
+- [X] filter by score 

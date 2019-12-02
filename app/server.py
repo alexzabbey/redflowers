@@ -34,17 +34,18 @@ async def download_file(dest):
             file_updated = json.load(j)["updated"]
         if file_updated == str(blob.updated):
             logging.info("Whew, no need to download")
-            return
+            return False
     logging.info("New model available! Downloading...")
     with open(dest, "wb") as f:
         blob.download_to_file(f)
     with open(path / "models/updated.json", "w") as fp:
         json.dump({"updated": str(blob.updated)}, fp)
-    return
+    return True
 
 
 async def setup_learner():
-    await download_file(path / "models" / f"{MODEL_FILE_NAME}.pth")
+    new_model = await download_file(path / "models" / f"{MODEL_FILE_NAME}.pth")
+    if not new_model: return
     data_bunch = ImageDataBunch.single_from_classes(
         path, classes, ds_tfms=get_transforms(), size=224
     ).normalize(imagenet_stats)
@@ -52,7 +53,7 @@ async def setup_learner():
     learn.load(MODEL_FILE_NAME)
     with open(path / "models/learn.pkl", "wb") as p:
         pickle.dump(learn, p)
-    return learn
+    return
 
 
 app = Starlette(on_startup=[setup_learner])
@@ -62,6 +63,7 @@ app.add_middleware(
     allow_headers=["X-Requested-With", "Content-Type"],
 )
 app.mount("/static", StaticFiles(directory="app/static"))
+test = False
 
 
 async def store(f, filename):
@@ -72,8 +74,12 @@ async def store(f, filename):
 
 
 async def write_metadata(payload):
+    if test:
+        with open("login.txt", "r") as f:
+            os.environ["DATABASE_URL"] = f.read()
     DATABASE_URL = (
-        os.environ["DATABASE_URL"].replace("postgres", "postgresql") + "?sslmode=require"
+        os.environ["DATABASE_URL"].replace("postgres", "postgresql")
+        + "?sslmode=require"
     )
     async with Database(DATABASE_URL) as database:
         if payload.get("prediction", None):
@@ -91,6 +97,9 @@ async def write_metadata(payload):
 
 @app.route("/")
 def index(request):
+    global test
+    test = True if request.client.host == "127.0.0.1" else False
+    logging.info(f"running in test mode: {test}")
     html = path / "view" / "index.html"
     return HTMLResponse(html.open(encoding="utf-8").read())
 
@@ -104,15 +113,18 @@ async def analyze(request):
     img = open_image(BytesIO(img_bytes))
     ext = data["file"].filename.split(".")[-1]
     filename = f"{str(uuid4())}.{ext}"
-    prediction = str(learn.predict(img)[0])
+    prediction = learn.predict(img)
+    score = prediction[2].data[prediction[1].item()].item()
+    pred_str = str(prediction[0]) if score > 0.8 else "not red flower"
     res = {
         "filename": filename,
-        "prediction": prediction,
-        "score": 0,
+        "prediction": pred_str,
+        "score": score,
     }
     tasks = BackgroundTasks()
-    tasks.add_task(store, f=BytesIO(img_bytes), filename=filename)
-    tasks.add_task(write_metadata, payload=res)
+    if not test:
+        tasks.add_task(store, f=BytesIO(img_bytes), filename=filename)
+        tasks.add_task(write_metadata, payload=res)
     # TODO: add score
     return JSONResponse(res, background=tasks)
 
@@ -120,5 +132,9 @@ async def analyze(request):
 @app.route("/feedback", methods=["POST"])
 async def feedback(request):
     req = await request.json()
-    task = BackgroundTask(write_metadata, payload=req)
-    return JSONResponse("thx", background=task)
+    print(req)
+    if not test:
+        task = BackgroundTask(write_metadata, payload=req)
+        return JSONResponse("thx", background=task)
+    else:
+        return JSONResponse("thx")
