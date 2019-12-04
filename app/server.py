@@ -15,11 +15,11 @@ import logging
 import pickle
 
 classes = ["calanit", "nurit", "pereg"]
-path = Path(__file__).parent
+path = Path(__file__).parent  # app
 BUCKET = "cnp-classifier-249308.appspot.com"
 MODEL_FILE_NAME = "stage-2"
 
-if not Path("keyfile.json").exists():
+if not (path.parent / "keyfile.json").exists():
     with open("keyfile.json", "w") as fp:
         json.dump(json.loads(os.environ["KEYFILE"]), fp)
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "keyfile.json"
@@ -34,25 +34,29 @@ async def download_file(dest):
             file_updated = json.load(j)["updated"]
         if file_updated == str(blob.updated):
             logging.info("Whew, no need to download")
-            return False
+            return
     logging.info("New model available! Downloading...")
+    then = datetime.now()
     with open(dest, "wb") as f:
         blob.download_to_file(f)
+    logging.info(f"Download took {datetime.now()- then}")
     with open(path / "models/updated.json", "w") as fp:
         json.dump({"updated": str(blob.updated)}, fp)
-    return True
-
+    return
 
 async def setup_learner():
     new_model = await download_file(path / "models" / f"{MODEL_FILE_NAME}.pth")
-    if not new_model: return
+    if (path / "models/export.pkl").exists():
+        return
     data_bunch = ImageDataBunch.single_from_classes(
         path, classes, ds_tfms=get_transforms(), size=224
     ).normalize(imagenet_stats)
     learn = cnn_learner(data_bunch, models.resnet50, pretrained=False)
     learn.load(MODEL_FILE_NAME)
-    with open(path / "models/learn.pkl", "wb") as p:
-        pickle.dump(learn, p)
+    learn.export("models/export.pkl")
+    logging.info("Exported model")
+    # with open(path / "models/learn.pkl", "wb") as p:
+    #     pickle.dump(learn, p)
     return
 
 
@@ -106,8 +110,7 @@ def index(request):
 
 @app.route("/analyze", methods=["POST"])
 async def analyze(request):
-    with open(path / "models/learn.pkl", "rb") as p:
-        learn = pickle.load(p)
+    learn = load_learner(path / "models")
     data = await request.form()
     img_bytes = await data["file"].read()
     img = open_image(BytesIO(img_bytes))

@@ -8,7 +8,9 @@ COPY requirements.txt .
 RUN pip install --upgrade -r requirements.txt
 
 COPY app app/
-ENV WEB_CONCURRENCY=2
+# COPY keyfile.json .
+ENV WEB_CONCURRENCY=1
+ENV PORT=8080
 
 EXPOSE 8080
 
