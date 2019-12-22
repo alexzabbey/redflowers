@@ -8,3 +8,4 @@ app/.vscode
 *.pkl
 keyfile.json
 login.txt
+redflowers.code-workspace
