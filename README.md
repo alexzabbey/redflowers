@@ -1,4 +1,4 @@
-**[redflowers.herokuapp.com]**
+**redflowers.herokuapp.com**
 
 ## Ideas
 
